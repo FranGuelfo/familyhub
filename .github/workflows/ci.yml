@@ -1,0 +1,58 @@
+name: FamilyHub CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    name: Tests unitarios y de integración
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Dar permisos de ejecución al wrapper de Gradle
+        run: chmod +x gradlew
+
+      - name: Ejecutar suite de pruebas
+        run: ./gradlew test --no-daemon
+
+      - name: Subir informe de pruebas si hay fallos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: build/reports/tests/test/
+
+  build-docker:
+    name: Compilar imagen Docker
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Construir imagen con caché de GitHub Actions
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: familyhub-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

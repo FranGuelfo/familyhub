@@ -1,0 +1,47 @@
+services:
+  familyhub-postgres:
+    image: postgres:16-alpine
+    container_name: familyhub-prod-db
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    networks:
+      - familyhub-internal-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  familyhub-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: familyhub-prod-api
+    restart: always
+    depends_on:
+      familyhub-postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: jdbc:postgresql://familyhub-postgres:5432/${DB_NAME}
+      DATABASE_USERNAME: ${DB_USER}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8080:8080"
+    networks:
+      - familyhub-internal-net
+
+networks:
+  familyhub-internal-net:
+    driver: bridge
+
+volumes:
+  postgres_prod_data:

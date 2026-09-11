@@ -1,0 +1,28 @@
+services:
+  familyhub-postgres:
+    image: postgres:16-alpine
+    container_name: familyhub-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: familyhub_db
+      POSTGRES_USER: familyhub
+      POSTGRES_PASSWORD: familyhub_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: familyhub-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@familyhub.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - familyhub-postgres
+
+volumes:
+  postgres_data:
