@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
 
@@ -22,6 +23,7 @@ class VehicleController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Registrar vehículo", description = "Registra un vehículo para una familia")
+    @PreAuthorize("hasRole('ADMIN')")
     fun registerVehicle(@Valid @RequestBody request: RegisterVehicleRequest): VehicleResponse {
         val vehicle = vehicleService.registerVehicle(
             familyId = request.familyId,

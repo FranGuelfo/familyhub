@@ -1,15 +1,17 @@
 spring:
-  test:
-    database:
-      replace: none 
-
   datasource:
     url: jdbc:postgresql://localhost:5432/familyhub_db
-    username: familyhub
-    password: familyhub_password
+    username: familyhub_prod_user
+    password: SuperSecretProdPassword2026!
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: true
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+  flyway:
+    enabled: false
+
+jwt:
+  secret-key: 9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b
+  expiration-ms: 86400000
