@@ -11,6 +11,22 @@ jobs:
     name: Tests unitarios y de integración
     runs-on: ubuntu-latest
 
+    # Levanta PostgreSQL en el runner antes de iniciar los pasos
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: familyhub_db
+          POSTGRES_USER: familyhub
+          POSTGRES_PASSWORD: password123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
@@ -26,6 +42,12 @@ jobs:
         run: chmod +x gradlew
 
       - name: Ejecutar suite de pruebas
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/familyhub_db
+          SPRING_DATASOURCE_USERNAME: familyhub
+          SPRING_DATASOURCE_PASSWORD: password123
+          JWT_SECRET_KEY: 9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b
+          SPRING_JPA_HIBERNATE_DDL_AUTO: update
         run: ./gradlew test --no-daemon
 
       - name: Subir informe de pruebas si hay fallos
